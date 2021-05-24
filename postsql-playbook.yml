@@ -1,0 +1,59 @@
+- hosts: database
+  become: yes
+  become_user: root
+  tasks:
+  - name: Install postgresql
+    become: yes
+    become_user: root
+    apt: 
+      name: postgresql 
+      state: present
+  - name: Install postgresql-contrib
+    become: yes
+    become_user: root
+    apt:
+      name: postgresql-contrib
+      state: present
+  - name: check if postgresql.conf already editet
+    shell: cat /etc/postgresql/10/main/postgresql.conf | grep "listen_addresses = 'localhost'" && echo "true" || echo "false"
+    register: check
+  - name: edit postgresql.conf
+    lineinfile:
+      state: present
+      path: "/etc/postgresql/10/main/postgresql.conf"
+      regexp: "^#listen_addresses = 'localhost'"
+      line: "listen_addresses = '*'"
+    when: check.stdout != 'false'
+  - name: check if pg_hba.conf already editet
+    become: yes
+    become_user: root
+    shell: cat /etc/postgresql/10/main/pg_hba.conf | grep 'host    all             all             0.0.0.0/0               md5'  && echo "true" || echo "false"
+    register: checktwo
+  - name: edit pg_hba.conf 
+    lineinfile:
+      state: present
+      path: "/etc/postgresql/10/main/pg_hba.conf"
+      regexp: '^host    all             all             127.0.0.1/32            md5'   
+      line: "host    all             all             0.0.0.0/0            md5"
+    when: checktwo.stdout == 'false'
+  - name: install prerequisites
+    become: yes
+    become_user: root
+    apt: 
+      name: python3-psycopg2
+      state: present
+  - name: Create a database for autopsy
+    become: yes
+    become_user: postgres
+    postgresql_db:
+      name: autopsy
+  - name: Add user credentials
+    become: yes
+    become_user: postgres 
+    postgresql_user: 
+      db: autopsy
+      name: admin
+      password: admin_SOC_admin
+      encrypted: yes
+   
+      

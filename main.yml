@@ -1,0 +1,16 @@
+---
+- import_playbook: non-root-user.yml
+- import_playbook: kube-dependencies.yml 
+- import_playbook: master-cluster.yml
+- import_playbook: workers-cluster.yml    
+- import_playbook: elasticSearch-playbook.yml
+- import_playbook: postsql-playbook.yml
+- import_playbook: nfs-playbook.yml
+- import_playbook: mariadb-playbook.yml
+- import_playbook: postsql-playbook.yml  
+- import_playbook: MISP_playbook.yml 
+- import_playbook: ghidra-playbook.yml
+- import_playbook: MISP_finalChanges.yml 
+- import_playbook: theHive-playbook.yml
+- import_playbook: autopsy-playbook.yml 
+ 

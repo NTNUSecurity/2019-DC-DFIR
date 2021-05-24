@@ -1,0 +1,28 @@
+apiVersion: v1 
+kind: Pod
+metadata: 
+  name: thehive
+  labels:
+    environment: thehive 
+spec:
+  hostNetwork: true
+  containers:
+  - args:
+    - --no-config-cortex
+    - --es-uri
+    image: thehiveproject/thehive:3.5.1-1
+    name: thehive
+    ports:
+    - containerPort: 9000
+    volumeMounts:
+    - name: application-config
+      mountPath: /etc/thehive/application.conf
+      subPath: application.properties
+  volumes: 
+    - name: application-config
+      configMap:
+        name: app-conf
+  nodeSelector: 
+    disktype: ssd 
+
+

@@ -1,0 +1,105 @@
+- hosts: localhost
+  become: yes
+  tasks:
+   - name: Get worker1 IP
+     become: yes
+     become_user: root
+     shell: grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' hosts | awk 'FNR == 2 {print}'
+     register: worker1
+
+   - name: Get database IP
+     become: yes
+     become_user: root
+     shell: grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' hosts | awk 'FNR == 5 {print}'
+     register: database
+
+- hosts: database
+  become: yes
+  tasks:
+   - name: Install NFS service
+     apt:
+       name: nfs-kernel-server
+       state: present
+       update_cache: true
+
+   - name: Create shared volume directory ghidra
+     file:
+       path: /mnt/ghidradb
+       state: directory
+       mode: 0777
+
+   - name: Create shared volume directory autopsy
+     file:
+       path: /mnt/autopsy
+       state: directory
+       mode: 0775 
+
+   - debug:
+       msg: "Found worker1 ip to be: {{ hostvars['localhost']['worker1'].stdout }}"
+
+   - name: Add permissions for worker1 in NFS exports
+     become: yes
+     become_user: root
+     lineinfile:
+       dest: /etc/exports
+       line: "/mnt/ghidradb {{ hostvars['localhost']['worker1'].stdout }}(rw,sync,no_subtree_check)" 
+
+   - name: Add permissions for autopsy in NFS exports
+     become: yes
+     become_user: root
+     lineinfile:
+       dest: /etc/exports
+       line: "/mnt/autopsy *(rw,sync,no_subtree_check)"
+
+   - become: yes
+     become_user: root
+     shell: exportfs -v
+     register: result
+
+   - debug:
+       var: result
+       verbosity: 2
+ 
+   - name: Reload NFS exports
+     become: yes
+     become_user: root
+     shell: exportfs -ra
+
+   - name: Restart NFS service
+     become: yes
+     become_user: root
+     shell: systemctl restart nfs-kernel-server
+
+# Install apt install nfs-common and mount to database ip
+- hosts: worker1
+  become: yes
+  tasks:
+   - name: Install nfs-common
+     apt:
+       name: nfs-common
+       state: present
+       force: yes
+
+   - name: Create shared volume directory
+     file:
+       path: /ghidra/server
+       state: directory
+       mode: 0775
+
+   - debug:
+       msg: "Found database ip to be: {{ hostvars['localhost']['database'].stdout }}"
+
+   - name: Mount nfs ghidra directory
+     mount:
+       src: "{{ hostvars['localhost']['database'].stdout }}:/mnt/ghidradb"
+       path: "/ghidra/server"
+       fstype: nfs
+       state: mounted
+
+#   - name: Enable automount on boot
+#     become: yes
+#     become_user: root
+#     lineinfile:
+#       dest: /etc/fstab
+#       line: "{{ hostvars['localhost']['database'].stdout }}:/mnt/ghidra /ghidra/server nfs rw 0 0"
+     

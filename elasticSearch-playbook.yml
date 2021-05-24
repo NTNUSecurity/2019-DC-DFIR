@@ -1,0 +1,53 @@
+- hosts: database
+  become: yes
+  become_user: root
+  tasks:
+    - name: update
+      become: yes
+      become_user: root
+      shell: apt update
+    - name: openjdk install 8
+      shell: apt install openjdk-8-jdk -y
+    - name: install https
+      shell: apt install apt-transport-https
+    - name: GPG key
+      shell: wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch |  apt-key add -
+    - name: add repo to system
+      shell: echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list
+    - name: install elasticsearch
+      shell: apt update  
+    - name: install elasticseach
+      shell: apt install elasticsearch -y 
+    - name: editing the elasticsearch.yml file
+      become: yes
+      become_user: root
+      ignore_errors: yes
+      file:
+        state: absent
+        path: /etc/elasticsearch/elasticsearch.yml
+        state: absent
+    - name: Getting new config file for elasticsearch
+#      become: yes
+#      become_user: root
+#      copy:
+#        src: "elasticsearch.yml" 
+#        dest: "/etc/elasticsearch/elasticsearch.yml"
+#        force: yes 
+      ignore_errors: yes
+      get_url: 
+        url: https://raw.githubusercontent.com/filiplinjo/Group116/master/elasticsearch.yml
+        dest: "/etc/elasticsearch/elasticsearch.yml"
+        force: yes 
+    - name: start elastic service
+      become: yes
+      become_user: root
+      shell: systemctl daemon-reload
+    - name: enable elasticsearch service
+      become: yes
+      become_user: root
+      shell: systemctl enable elasticsearch.service
+    - name: start elasticseach
+      become: yes
+      become_user: root
+      shell: systemctl start elasticsearch.service
+

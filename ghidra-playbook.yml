@@ -1,0 +1,44 @@
+- hosts: localhost
+  connection: local
+  become: yes
+  become_user: ubuntu
+  tasks: 
+    - name: get ip of worker1 from hosts 
+      shell: grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' hosts | awk 'FNR == 2 {print}' 
+      register: workerone
+    - name: copy host to server.conf
+      lineinfile: 
+        state: present
+        path: "server.conf"
+        regexp: '^wrapper.app.parameter.3=-ip'
+        line: "wrapper.app.parameter.3=-ip{{workerone.stdout}}"
+- hosts: master
+  become: yes
+  become_user: ubuntu
+  tasks:
+    - name: label worker1
+      become: yes
+      become_user: ubuntu
+      shell: kubectl label nodes worker1 disktype=sd --overwrite=true
+    - name: copy file to master
+      copy: 
+        src: ghidraSetup.yml
+        dest: ghidraSetup.yml
+    - name: copy file to master
+      copy: 
+        src: server.conf
+        dest: server.conf
+    - name: check if configmap already exists
+      become: yes
+      become_user: ubuntu
+      shell: kubectl get configmap | grep server-config && echo "true" || echo "false"
+      register: result
+    - name: Create configmap for Ghidra
+      become: yes
+      become_user: ubuntu
+      shell: kubectl create configmap server-config --from-file server.conf
+      when: result.stdout == 'false'  
+    - name: Setting up GhidraServer
+      become: yes
+      become_user: ubuntu
+      shell: kubectl apply -f ghidraSetup.yml

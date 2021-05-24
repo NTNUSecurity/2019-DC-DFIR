@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ghidra
+  labels:
+    app: ghidra
+spec:
+  hostNetwork: true
+  containers:
+    - name: ghidra
+      image: ghidratestdocker343/2b1d62ab0e42:latest
+      volumeMounts:
+      - name: server-configuration
+        mountPath: /ghidra/server/server.conf
+        subPath: server.conf
+      - name: host-volume
+        mountPath: /repos
+  volumes: 
+    - name: server-configuration
+      configMap:
+        name: server-config
+    - name: host-volume
+      hostPath:
+        path: /ghidra/server
+  nodeSelector:
+      disktype: sd      
