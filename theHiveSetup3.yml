@@ -10,6 +10,7 @@ spec:
   - args:
     - --no-config-cortex
     - --es-uri
+    - http://
     image: thehiveproject/thehive:3.5.1-1
     name: thehive
     ports:
