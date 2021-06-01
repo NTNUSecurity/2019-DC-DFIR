@@ -55,5 +55,8 @@
       name: admin
       password: admin_SOC_admin
       encrypted: yes
-   
+  - name: restart postgresql
+    become: yes
+    become_user: root
+    shell: systemctl restart postgresql    
       
