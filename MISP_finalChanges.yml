@@ -45,6 +45,6 @@
      become_user: root
      replace:
        path: "application.properties"
-       regexp: 'key = ""'
-       replace: "key = {{hostvars['master']['authkey'].stdout}}"
+       regexp: key = ""
+       replace: key = "{{hostvars['master']['authkey'].stdout}}"
      when: check.stdout == 'false'

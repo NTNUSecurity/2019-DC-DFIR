@@ -24,8 +24,8 @@
       become_user: root
       replace: 
         path: "application.properties"
-        regexp: 'uri = "http://"'  
-        replace: "uri = http://{{hostvars['database']['theHivedatabase'].stdout}}:9200"
+        regexp: uri = "http://"  
+        replace: uri = "http://{{hostvars['database']['theHivedatabase'].stdout}}:9200"
       when: check.stdout == 'false'
     - name: Check if already copied host to application.properties (MISP)
       become: yes
