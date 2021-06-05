@@ -8,8 +8,8 @@
 - import_playbook: MISP_playbook.yml
 - import_playbook: elasticSearch-playbook.yml 
 - import_playbook: postsql-playbook.yml 
-- import_playbook: ghidra-playbook.yml
-- import_playbook: MISP_finalChanges.yml 
+- import_playbook: ghidra-playbook.yml 
 - import_playbook: autopsy-playbook.yml
+- import_playbook: MISP_finalChanges.yml
 - import_playbook: theHive-playbook.yml
  
